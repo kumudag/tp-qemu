@@ -30,7 +30,7 @@ def run(test, params, env):
     interpreter = params.get("interpreter")
     script = params.get("guest_script")
     dst_script_path = params.get("dst_rsc_path", "/home/nested.sh")
-    test_timeout = float(params.get("test_timeout", 600000))
+    test_timeout = int(params.get("test_timeout", 600000))
     download_cmd = "wget %s -O %s" % (script, dst_script_path)
     run_cmd = "%s %s" % (interpreter, dst_script_path)
     result_check_cmd = "[ -d %s ]" % result_path
@@ -48,22 +48,22 @@ def run(test, params, env):
         logging.info("Starting script...")
         logging.info("Cleaning up previous results folder, if present")
         session.cmd_status_output(cleanup_cmd, print_func=logging.info,
-                                  timeout=test_timeout, safe=True)
+                                  timeout=600, safe=True)
         logging.debug("Downloading script...")
         s, o = session.cmd_status_output(download_cmd, print_func=logging.info,
-                                         timeout=test_timeout, safe=True)
+                                         timeout=100, safe=True)
         if s != 0:
             test.fail("Download script '%s' failed, output is: %s" % (download_cmd, o))
         try:
             logging.info("------------ Script output ------------")
             s, o = session.cmd_status_output(run_cmd, print_func=logging.info,
-                                             timeout=test_timeout, safe=True)
+                                             timeout=test_timeout-1800, safe=True)
 
             if s != 0:
                 test.fail("Run script '%s' failed, script output is: %s" % (run_cmd, o))
         finally:
             s, o = session.cmd_status_output(result_check_cmd, print_func=logging.info,
-                                             timeout=test_timeout, safe=True)
+                                             timeout=100, safe=True)
             if s == 0:
                 guest_results_dir = utils_misc.get_path(test.debugdir, vm.name)
                 results_tarball = os.path.join(home_path, "results.tgz")
@@ -72,7 +72,7 @@ def run(test, params, env):
                 compress_cmd += " --exclude=*core*"
                 compress_cmd += " --exclude=*crash*"
                 compress_cmd += " ./*"
-                session.cmd(compress_cmd, timeout=100)
+                session.cmd(compress_cmd, timeout=600)
                 process.run("mkdir -p %s" % guest_results_dir)
                 vm.copy_files_from(results_tarball, guest_results_dir)
                 # cleanup results dir from guest
