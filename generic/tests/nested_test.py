@@ -27,12 +27,12 @@ def run(test, params, env):
     # make sure this path matches the path in the script
     home_path = params.get("home_path", "/home/epcci")
     result_path = os.path.join(home_path, params.get("result_path", "tests/results"))
-    interpreter = params.get("interpreter")
+    # interpreter = params.get("interpreter")
     script = params.get("guest_script")
     dst_script_path = params.get("dst_rsc_path", "/home/nested.sh")
     test_timeout = int(params.get("test_timeout", 600000))
     download_cmd = "wget %s -O %s" % (script, dst_script_path)
-    run_cmd = "%s %s" % (interpreter, dst_script_path)
+    run_cmd = "chmod +x %s; %s" % (dst_script_path, dst_script_path)
     result_check_cmd = "[ -d %s ]" % result_path
     cleanup_cmd = "rm -rf %s || echo 'Results folder not present,No need to clean'" % result_path
 
